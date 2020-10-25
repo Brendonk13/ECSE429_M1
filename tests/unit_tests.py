@@ -140,35 +140,121 @@ def test_delete_todo_link_project():
 
 # -------------- /projects --------------------
 def test_get_all_projects():
+    endpoint = 'projects'
+    response = requests.get(apiURL + endpoint)
+    assert response.status_code == 200
+
     return
+
 
 def test_get_project_by_id():
-    return
+    endpoint = 'projects/1'
+    response = requests.get(apiURL + endpoint)
+    assert response.status_code == 200
+
 
 def test_post_project():
-    return
+    endpoint = 'projects'
+    test_project = {"title": "correct test", "description": "helloworld"}
+
+    response = requests.post(apiURL + endpoint, json=test_project)
+    print(response)
+    assert response.status_code == 201
+    response_body = response.json()
+    new_id = response_body["id"]
+    anotherresponse = requests.delete(apiURL + endpoint + '/' + new_id)
+    assert anotherresponse.status_code == 200
+
 
 def test_post_invalid_project():
+    endpoint = 'projects'
+    test_project = {"id": "1", "title": "fail test", "description": "helloworld"}
+
+    response = requests.post(apiURL + endpoint, json=test_project)
+    assert response.status_code == 400
     return
+
 
 def test_delete_project_by_id():
+    endpoint = 'projects'
+    test_project = {"title": "correct test", "description": "helloworld"}
+
+    response = requests.post(apiURL + endpoint, json=test_project)
+    assert response.status_code == 201
+    response_body = response.json()
+    new_id = response_body["id"]
+
+    response = requests.delete(apiURL + endpoint + '/' + new_id)
+    assert response.status_code == 200
     return
+
 
 def test_delete_project_with_tasks():
-    #deleting a project that has tasks should not delete the task
+    # deleting a project that has tasks should not delete the task
+
+    endpoint = 'projects/1/tasks'
+    test_project = {"id": "2"}
+
+    response = requests.post(apiURL + endpoint, json=test_project)
+    assert response.status_code == 201
+    response = requests.delete(apiURL + endpoint + '/2')
+    assert response.status_code == 200
     return
+
+def test_delete_project_with_category():
+    # deleting a project that has tasks should not delete the task
+
+    endpoint = 'projects/1/categories'
+    test_project = {"id": "2"}
+
+    response = requests.post(apiURL + endpoint, json=test_project)
+    assert response.status_code == 201
+    response = requests.delete(apiURL + endpoint + '/2')
+    assert response.status_code == 200
+    return
+
+
 
 def test_get_project_todos():
-    #get the tasks associated to a project
+    # get the tasks associated to a project
+    endpoint = 'projects/1/tasks'
+    response = requests.get(apiURL + endpoint)
+    assert response.status_code == 200
+
     return
+
 
 def test_get_project_categories():
-    endpoint = '/projects/:id/categories'
+    endpoint = '/projects/100/categories'
+    response = requests.get(apiURL + endpoint)
+    assert response.status_code == 200
+
     return
 
+
 def test_post_project_link_category():
-    #create a link between a project and a category (that exists or doesnt exist)
+    # create a link between a project and a category (that exists or doesnt exist)
+    endpoint = 'projects/1/categories'
+    test_project = {"id": "2"}
+
+    response = requests.post(apiURL + endpoint, json=test_project)
+    assert response.status_code == 201
+    response = requests.delete(apiURL + endpoint + '/2')
+    assert response.status_code == 200
     return
+
+
+def test_post_project_link_tasks():
+    endpoint = 'projects/1/tasks'
+    test_project = {"id": "2"}
+
+    response = requests.post(apiURL + endpoint, json=test_project)
+    print(response)
+    assert response.status_code == 201
+    response = requests.delete(apiURL + endpoint + '/2')
+    assert response.status_code == 200
+    return
+
 
 
 # -------------- /categories ------------------
