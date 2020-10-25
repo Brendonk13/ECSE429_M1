@@ -5,7 +5,7 @@
 # to run all tests:
 # terminal: nosetests --verbosity=2 tests    
 
-from nose.tools import assert_true, assert_equal, assert_is_not_none, assert_list_equal
+from nose.tools import assert_true, assert_equal, assert_is_not_none, assert_list_equal, assert_in
 import requests
 
 apiURL = 'http://localhost:4567/'
@@ -117,23 +117,115 @@ def test_delete_todo_by_id():
     return
 
 def test_get_todo_categories():
+    endpoint = 'todos/1/categories'
+    r = requests.get(apiURL + endpoint)
+    assert(r.ok)
+    r_body = r.json()
+    assert_equal(len(r_body["categories"]), 1)
+    assert_equal(r_body["categories"], [{"id": "1","title": "Office","description": ""}])
     return
 
 def test_post_todo_link_category():
+    endpoint = 'todos/1/categories'
+
+    # num categories before adding new link
+    r = requests.get(apiURL + endpoint).json()
+    num = len(r["categories"])
+
+    # post new link
+    r = requests.post(apiURL + endpoint,json={"id":"2"})
+    assert(r.ok)
+
+    # check that category link is posted at 'todos/1/categories'
+    r = requests.get(apiURL + endpoint).json()
+    assert_equal(len(r["categories"]), num+1)
+
+    # @after: delete this new link
+    requests.delete(apiURL + endpoint + '/2')
+    return
+
+def test_post_todo_link_category_invalid():
+    endpoint = 'todos/1/categories'
+
+    # post invalid category to this todo
+    r = requests.post(apiURL + endpoint,json={"id":"9000"})
+    assert_equal(r.status_code,404)
     return
 
 def test_delete_todo_link_category():
+    endpoint = 'todos/1/categories'
+
+    # @before:  post new link
+    r = requests.post(apiURL + endpoint,json={"id":"2"})
+
+    # num categories before deleting
+    r = requests.get(apiURL + endpoint).json()
+    num = len(r["categories"])
+
+    # delete the link
+    r = requests.delete(apiURL + endpoint + '/2')
+    assert(r.ok)
+
+    # check that link does not exist anymore
+    r = requests.get(apiURL + endpoint + '/2')
+    assert_equal(r.status_code, 404)
+    r = requests.get(apiURL + endpoint).json()
+    assert_equal(num - 1, len(r["categories"]))
     return
 
 def test_get_todo_projects():
-    endpoint= 'todos/id/tasksof'
+    endpoint = 'todos/2/tasksof'
+    r = requests.get(apiURL + endpoint)
+    assert(r.ok)
+    r_body = r.json()
+    assert_equal(len(r_body["projects"]), 1)
+    assert_equal(r_body["projects"],
+    [{"id": "1","title": "Office Work","completed": "false","active": "false","description": "","tasks": [{"id": "2"},{"id": "1"}]}])
     return
 
 def test_post_todo_link_project():
-    endpoint = 'todos/id/tasksof'
+    endpoint = 'todos/1/tasksof'
+
+    # num projects before adding new link
+    r = requests.get(apiURL + endpoint).json()
+    num = len(r["projects"])
+
+    # create a new project for test
+    r = requests.post(apiURL + 'projects',json={'title':'Test Project'}).json()
+    proj_id = r["id"]
+    
+    # post new link of project to a todo
+    r = requests.post(apiURL + endpoint,json={"id":proj_id})
+    assert(r.ok)
+
+    # check that project link is posted at 'todos/1/tasksof'
+    r = requests.get(apiURL + endpoint).json()
+    assert_equal(len(r["projects"]), num+1)
+
+    # @after: delete this new link, delete test project
+    requests.delete(apiURL + endpoint + '/' + proj_id)
+    requests.delete(apiURL + 'projects/' + proj_id)
     return
 
 def test_delete_todo_link_project():
+    endpoint = 'todos/1/tasksof'
+
+    # @before:  create new proj for test and post new link
+    r = requests.post(apiURL + 'projects',json={'title':'Test Project'}).json()
+    proj_id = r["id"]
+    r = requests.post(apiURL + endpoint,json={"id":proj_id})
+
+    # num projects before deleting
+    r = requests.get(apiURL + endpoint).json()
+    num = len(r["projects"])
+
+    # delete the link to test project
+    r = requests.delete(apiURL + endpoint + '/' + proj_id)
+    assert(r.ok)
+
+    # check that link does not exist anymore
+    r = requests.get(apiURL + endpoint).json()
+    assert_equal(num - 1, len(r["projects"]))
     return
 
 
