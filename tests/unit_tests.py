@@ -23,10 +23,10 @@ def test_API():
 
 # -------------- /todos -----------------------
 
-def get_all_todos():
+def test_get_all_todos():
     endpoint = 'todos'
     response = requests.get(apiURL + endpoint)
-
+    print(response)
     # Confirm that the request-response cycle completed successfully.
     assert_true(response.ok)
     #assert default todos have associated fields
@@ -34,7 +34,7 @@ def get_all_todos():
     #delete?
     return
 
-def get_todo_by_id():
+def test_get_todo_by_id():
     endpoint = 'todos'
     test_todo = [{
         'title': 'Test Todo',
@@ -48,102 +48,102 @@ def get_todo_by_id():
 
     return
 
-def post_todo():
+def test_post_todo():
     #post request with new title, description
     # assert that it is posted at /todos and at /todo/id
     return
 
-def delete_todo_by_id():
+def test_test_delete_todo_by_id():
     return
 
-def post_invalid_todo():
+def test_post_invalid_todo():
     return
 
-def get_todo_categories():
+def test_get_todo_categories():
     return
 
-def post_todo_link_category():
+def test_post_todo_link_category():
     return
 
-def delete_todo_link_category():
+def test_delete_todo_link_category():
     return
 
-def get_todo_projects():
+def test_get_todo_projects():
     endpoint= 'todos/id/tasksof'
     return
 
-def post_todo_link_project():
+def test_post_todo_link_project():
     endpoint = 'todos/id/tasksof'
     return
 
-def delete_todo_link_project():
+def test_delete_todo_link_project():
     return
 
 
 
 # -------------- /projects --------------------
-def get_all_projects():
+def test_get_all_projects():
     return
 
-def get_project_by_id():
+def test_get_project_by_id():
     return
 
-def post_project():
+def test_post_project():
     return
 
-def post_invalid_project():
+def test_post_invalid_project():
     return
 
-def delete_project_by_id():
+def test_delete_project_by_id():
     return
 
-def delete_project_with_tasks():
+def test_delete_project_with_tasks():
     #deleting a project that has tasks should not delete the task
     return
 
-def get_project_todos():
+def test_get_project_todos():
     #get the tasks associated to a project
     return
 
-def get_project_categories():
+def test_get_project_categories():
     endpoint = '/projects/:id/categories'
     return
 
-def post_project_link_category():
+def test_post_project_link_category():
     #create a link between a project and a category (that exists or doesnt exist)
     return
 
 
 # -------------- /categories ------------------
-def get_all_categories():
+def test_get_all_categories():
     return
 
-def get_category_by_id():
+def test_get_category_by_id():
     return
 
-def post_category():
+def test_post_category():
     return
 
-def delete_category_by_id():
+def test_delete_category_by_id():
     return
 
-def get_category_projects():
+def test_get_category_projects():
     return
 
-def post_category_project():
+def test_post_category_project():
     return
 
-def delete_category_project():
+def test_delete_category_project():
     return
 
-def get_category_todos():
+def test_get_category_todos():
     endpoint = 'categories/id/todos/id'
     return
 
-def post_category_todos():
+def test_post_category_todos():
     return
 
-def delete_category_todos():
+def test_delete_category_todos():
     return
 
 # -------------- /docs----------------------
