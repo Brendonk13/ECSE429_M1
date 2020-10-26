@@ -1,29 +1,15 @@
 from random import random, randrange, choice
 import re
-from nose.tools import assert_true, assert_equal, assert_is_not_none, assert_list_equal, assert_in
+from nose.tools import assert_true, assert_equal, assert_is_not_none, assert_list_equal, assert_in, assert_not_in
 from Request import StateRestoringRequest
 from request_types import Get
-
-
-
-ID_PATTERN = re.compile(r'.*/(\d+)')
-
+from helpers import has_id, extract_id, extract_response_id, extract_object_name
 
 
 
 def rand_num():
     # random number from random range 1 -> random() * 1000
     return randrange(1, int(random() * 1000))
-
-
-def has_id(endpoint):
-    return endpoint[-1].isdecimal()
-
-
-def extract_id(endpoint):
-    ID = re.search(ID_PATTERN, endpoint)
-    return ID.group(1) if ID else None
-
 
 def random_request_parameters(number_params):
     return [
@@ -64,21 +50,18 @@ def get_urls():
 
 
 def get_request_inputs():
+    """
+        store a series of (url, id, parameters)
+        to use as input for a StateRestoringRequest object
+    """
     ID = None
     inputs = []
     for url in get_urls():
         ID = -1 if not has_id(url) else extract_id(url)
+
         inputs.append((url, ID, random_request_parameter()))
     return inputs
 
-
-def extract_response_id(response, key):
-    return [
-        category['id']
-        for category in
-        response[key]
-        if 'id' in category
-    ]
 
 
 def get_existing_category_IDs():
@@ -92,30 +75,60 @@ def get_existing_category_IDs():
 
 
 def test_get_categories():
-    # in actual test we can assert len == 2 (initial state of application has 2 categories: 1, 2
-    print(get_existing_category_IDs())
+    # initial state of application has 2 categories: 1, 2
+    assert(len(get_existing_category_IDs()) == 2)
 
 
-def verify_get_category_todos(request):
+def verify_post_created_object(request, object_name):
+    # state before post
+    original_state = request.request_states.original_state
+    # ID of new object created by post
+    created_ID = request.get_request_by_name('POST').created_ID
+
+    # if the created_ID isn't in the original state but is after the post, then the post was successful
+    assert_not_in(created_ID, extract_response_id(original_state, object_name))
+
+
+def verify_state_preserved(request):
+    """
+        Called after all requests made to an endpoint
+        checks that the original state before any requests is the same as the current state (after requests made)
+    """
+    original_state = request.request_states.original_state
+    assert_equal(original_state, request.request_states.get_current_state())
+
+
+def verify_get_category_todos(request, object_name):
     """
         Called when we create a StateRestoringRequest with url of the following form:
         http://localhost:4567/categories/1/todos
 
-        For example, if created_ID = 10
-        Then the get request we would LIKE to make is: GET http://localhost:4567/categories/1/todos/10
+        For example, if created_ID = 10:
+            Then the get request we would LIKE to make is: GET http://localhost:4567/categories/1/todos/10
 
-        But the service we are testing doesn't allow this type of request
-        Workaround to verify our POST with created_ID = 10 worked:
-            instead do GET http://localhost:4567/categories/1/todos
-            and store response for all todo's
+            But the service we are testing doesn't allow this type of request
+            Workaround to verify our POST with created_ID = 10 worked:
+                instead do GET http://localhost:4567/categories/1/todos
+                and store response for all todo's
 
-            This function parses this response and checks if an object with id == created_ID exists
+                This function parses this response and checks if an object with id == created_ID exists
     """
     get_request = request.get_request_by_name('GET')
     response = get_request.response
     created_ID = request.get_created_ID()
 
-    assert_in(created_ID, extract_response_id(response, 'todos'))
+    assert_in(created_ID, extract_response_id(response, object_name))
+
+
+def verify_get_worked(request, object_name):
+    """
+        We check if the new ID from POST appears in the response from the GET
+    """
+    get_request = request.get_request_by_name('GET')
+    response = get_request.response
+    created_ID = request.get_created_ID()
+
+    assert_in(created_ID, extract_response_id(response, object_name))
 
 
 
@@ -126,11 +139,44 @@ def test_create_delete_categories():
         (url, ID, params) = inp
         with StateRestoringRequest(url, ID=ID, params=params) as request:
             request.perform_requests()
+            object_name = extract_object_name(url)
             if re.search(r'(.*/categories/\d+/todos)', url):
-                verify_get_category_todos(request)
+                verify_get_category_todos(request, object_name)
+
+            # verify post worked
+            verify_post_created_object(request, object_name)
+            verify_get_worked(request, object_name)
+            # verify delete worked
+            verify_state_preserved(request)
+
             print('done requests')
 
 
 if __name__ == "__main__":
-    # test_get_categories()
+    test_get_categories()
     test_create_delete_categories()
+
+
+
+"""
+Done:
+    /categories/
+    /categories/id/todos/id - this isn't actually a bug tho ..
+
+next:
+    Add a GET before anythign in StateRestoringRequest
+    -- then show that the created_ID in POST didn't exist in the original state
+    -- then GET shows the created_ID was actually stored
+    -- then show that created_ID not in response after DELETE
+
+    remove bug notice about /categories/id/todos/id
+    -- We only test DELETE for this
+        - but this IS undocumented behaviour!! (I was able to POST, not mentioned !!!!!!!!!!)
+
+
+
+    /categories/id
+    /categories/:id/projects
+    /categories/:id/projects/:id
+
+"""

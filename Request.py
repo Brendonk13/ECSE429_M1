@@ -1,6 +1,7 @@
 import socket
 import requests
 from request_types import Post, Get, Delete
+from helpers import has_id, extract_id, extract_response_id, url_without_id
 
 """ Notes
 
@@ -49,7 +50,26 @@ class RequestStates:
         return 'POST' in self.completed_requests
 
 
+    def get_current_state(self):
+        get_all_url = url_without_id(self.url) if has_id(self.url) else self.url
+        # removing the id from the url means we will retrieve all objects at this endpoint
+        request = Get(get_all_url)
+        request.make_request()
+        print(f'original state: {request}')
+        return request.response
+
+
+    def store_initial_state(self):
+        """
+            We store the initial state to verify that POST worked: (check that created_ID not in the initial state)
+            And also to verify that the DELETE worked: assert(initial_state = state after DELETE)
+        """
+        # called before changing state therefore this is the original state
+        self.original_state = self.get_current_state()
+
+
     def make_requests(self):
+        self.store_initial_state()
         for request in self.get_requests():
             # print('before request !')
             if self.have_done_post():
@@ -114,14 +134,12 @@ class StateRestoringRequest:
 
 
     def __exit__(self, *args):
-        if self.recieved_bad_input:
-            return
+        # if self.recieved_bad_input:
+        #     return
         # print(self.recieved_bad_input)
         # print('------------------')
         if self.need_to_clean_up():
             print('need to cleanup')
-            print(f'{self.request_states.have_changed_state}')
-            print(f'{self.request_states.deleted_data}')
             self.request_states.manually_delete_data()
 
 
@@ -167,10 +185,3 @@ if __name__ == "__main__":
     with r as request:
         request.perform_requests()
         print(f'------ done requests for url: {request.url} -------')
-
-
-"""
-next:
-    create a python file with all the endpoints
-    loop over endpoints and test immutableRequest
-"""
