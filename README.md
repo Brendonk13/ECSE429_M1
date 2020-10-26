@@ -13,4 +13,5 @@ Please note that our unit tests are run in Python, using the nose requests and u
 > runTodoManagerRestAPI-1.5.5.jar
 
 ## Run Unit Test Suite in python
-> nosetests --verbosity=2 tests    
+> nosetests -v --with-randomly to run them in random order
+>nosetests -v to run them in order
