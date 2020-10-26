@@ -1,4 +1,4 @@
-from random import random, randrange, choice
+from random import random, randrange, choice, shuffle
 import re
 from nose.tools import assert_true, assert_equal, assert_is_not_none, assert_list_equal, assert_in, assert_not_in
 from Request import StateRestoringRequest
@@ -68,14 +68,18 @@ def get_tested_endpoints():
     ]
 
 
-def get_request_inputs():
+def random_order_queries():
     """
         store a series of (url, id, parameters)
         to use as input for a StateRestoringRequest object
     """
     ID = None
     inputs = []
-    for url in get_tested_endpoints():
+    random_order_endpoints = get_tested_endpoints()
+    # shuffle the endpoints so that we test in a random order
+    shuffle(random_order_endpoints)
+
+    for url in random_order_endpoints:
         ID = -1 if not has_id(url) else extract_id(url)
 
         inputs.append((url, ID, random_request_parameter()))
@@ -152,41 +156,22 @@ def verify_all_operations(request, object_name):
 
 
 def test_create_delete_categories():
-    for inp in get_request_inputs():
+    for inp in random_order_queries():
         print(inp)
         (url, ID, params) = inp
         with StateRestoringRequest(url, ID=ID, params=params) as request:
+
             request.perform_requests()
             verify_all_operations(request, extract_object_name(url))
             print('----------------- done requests for url: {} ---------------\n'.format(url))
 
 
+def random_order_category_test():
+    tests = [test_create_delete_categories, test_get_all]
+    shuffle(tests)
+    return tests
+
 if __name__ == "__main__":
-    # test_get_categories()
-    test_create_delete_categories()
-    test_get_all()
+    for test_function in random_order_category_test():
+        test_function()
 
-
-
-"""
-Done:
-    get all /categories/
-    /categories/id/todos/id - this isn't actually a bug tho ..
-    /categories/:id/projects/:id
-    /categories/id
-
-next:
-    Add a GET before anythign in StateRestoringRequest
-    -- then show that the created_ID in POST didn't exist in the original state
-    -- then GET shows the created_ID was actually stored
-    -- then show that created_ID not in response after DELETE
-
-    remove bug notice about /categories/id/todos/id
-    -- We only test DELETE for this
-        - but this IS undocumented behaviour!! (I was able to POST, not mentioned !!!!!!!!!!)
-
-
-
-    /categories/:id/projects
-
-"""
