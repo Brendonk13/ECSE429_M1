@@ -10,7 +10,7 @@ Please note that our unit tests are run in Python, using the nose requests and u
 > pip install nose requests
 
 ## Ensure 'todo manager API' is running on localhost:4567
-> runTodoManagerRestAPI-1.5.5.jar
+> java -jar runTodoManagerRestAPI-1.5.5.jar
 
 ## Run Unit Test Suite in python
 > nosetests -v --with-randomly to run them in random order \

@@ -1,14 +1,8 @@
 import socket
 import requests
 from request_types import Post, Get, Delete
-from helpers import has_id, extract_id, extract_response_id, url_without_id
+from helpers import has_id, extract_id, extract_response_id, url_without_id, verify_service_is_running
 
-
-class ThingifierServiceInactive(Exception):
-    """
-        Only ever raised if port_is_open() function returns false (in ImmutableRequest.__init__)
-    """
-    pass
 
 
 class RequestStates:
@@ -99,8 +93,7 @@ class StateRestoringRequest:
 
     def __init__(self, url, ID=-1, json=True, params=None):
         """ Default is a get request with no parameters which returns json data """
-        if not port_is_open():
-            raise ThingifierServiceInactive
+        verify_service_is_running()
         self.url = url
         self.ID = ID
         self.params = params
@@ -140,12 +133,6 @@ class StateRestoringRequest:
     )
 
 
-
-
-def port_is_open():
-    a_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    location = ("127.0.0.1", 4567)
-    return a_socket.connect_ex(location) == 0
 
 
 if __name__ == "__main__":

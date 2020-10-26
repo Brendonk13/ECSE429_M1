@@ -1,4 +1,5 @@
 import re
+import socket
 
 ID_PATTERN = re.compile(r'.*/(\d+)')
 URL_PATTERN = re.compile(r'(.*)/\d+')
@@ -10,6 +11,13 @@ NO_GET_ENDPOINTS = [
         re.compile(r'(.*/categories/\d+/todos)/(\d+)'),
         re.compile(r'(.*/categories/\d+/projects)/(\d+)'),
     ]
+
+
+class ThingifierServiceInactive(Exception):
+    """
+        Only ever raised if port_is_open() function returns false (in ImmutableRequest.__init__)
+    """
+    pass
 
 
 def has_id(endpoint):
@@ -57,3 +65,15 @@ def get_request_url(endpoint):
             return [search_result.group(1)]
 
     return [endpoint]
+
+
+def verify_service_is_running():
+    if not port_is_open():
+        raise ThingifierServiceInactive
+
+
+def port_is_open():
+    a_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    location = ("127.0.0.1", 4567)
+    return a_socket.connect_ex(location) == 0
+
