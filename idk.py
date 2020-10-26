@@ -1,9 +1,12 @@
 import requests
 
-url = "http://localhost:4567/todos/1"
+url = "http://localhost:4567/todos/"
 
-r = requests.get(url = url)
+data = {'id': '2', 'title': 'new title'}
+r = requests.post(url = url, json = data)
+print(r.status_code)
+print(r.json())
 
-data = r.json()
-
-print(data)
+if r.ok:
+    data = r.json()
+    print(data)
