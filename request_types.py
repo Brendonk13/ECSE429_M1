@@ -1,6 +1,7 @@
 import json
 from requests import get, post, delete
 from re import search
+from helpers import get_request_url
 
 class Post:
     def __init__(self, url, params):
@@ -39,16 +40,22 @@ class Get:
 
 
     def set_new_id(self, ID):
+        print(f'before set new id: {self.url}')
         self.args = [self.url + '/' + str(ID)]
         self.url  = self.args[0]
+        print(f'after set new id: {self.url}')
 
 
     def make_request(self):
-        search_result = search(r'(.*/categories/\d+/todos)/(\d+)', self.url)
-        if search_result:
-            self.args = [search_result.group(1)]
-            print(self.args)
+        # search_result = search(r'(.*/categories/\d+/todos)/(\d+)', self.url)
+        # if search_result:
+        #     self.args = [search_result.group(1)]
+        #     print(self.args)
 
+        # this fxn handles endpoints which do not support get requests
+        self.args = get_request_url(self.url)
+
+        print(self.args)
         self.request = get(*self.args)
         self.response = self.request.json()
         # if search_result:
@@ -57,7 +64,7 @@ class Get:
 
     def get_status_code(self):
         """
-            need to wrap this since sometimes we don't make a request (when given categories/num/todos/num endpoint)
+            need to wrap this since sometimes we don't make a request (thus self.request = None) happens (when given categories/num/todos/num endpoint)
         """
         return self.request.status_code if self.request else -1
 

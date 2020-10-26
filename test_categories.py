@@ -24,8 +24,8 @@ def random_request_parameter():
 
 def request_parameters():
     return [
-        {"title": "random new title!"},
-        {"title": "random title !"},
+        {"title": "this is a new title!"},
+        {"title": "new title !"},
         {"title": "this is so random!", "description": "A random cool thing!"},
         {"title": "The title", "description": "good stuff here"},
         {"title": "good title", "description": "a good description"},
@@ -33,11 +33,13 @@ def request_parameters():
 
 
 def category_endpoints():
+    existing_IDs = get_existing_category_IDs()
     return [
-        'categories/{}/todos'.format(choice(get_existing_category_IDs())),
+        'categories/{}/todos'.format(choice(existing_IDs)),
+        'categories',
+        '/categories/{}/projects'.format(choice(existing_IDs)),
     ]
 # 'categories',
-# 'categories/{}'.format(rand_num()),
 
 
 def get_urls():
@@ -98,26 +100,26 @@ def verify_state_preserved(request):
     assert_equal(original_state, request.request_states.get_current_state())
 
 
-def verify_get_category_todos(request, object_name):
-    """
-        Called when we create a StateRestoringRequest with url of the following form:
-        http://localhost:4567/categories/1/todos
+# def verify_get_category_todos(request, object_name):
+#     """
+#         Called when we create a StateRestoringRequest with url of the following form:
+#         http://localhost:4567/categories/1/todos
 
-        For example, if created_ID = 10:
-            Then the get request we would LIKE to make is: GET http://localhost:4567/categories/1/todos/10
+#         For example, if created_ID = 10:
+#             Then the get request we would LIKE to make is: GET http://localhost:4567/categories/1/todos/10
 
-            But the service we are testing doesn't allow this type of request
-            Workaround to verify our POST with created_ID = 10 worked:
-                instead do GET http://localhost:4567/categories/1/todos
-                and store response for all todo's
+#             But the service we are testing doesn't allow this type of request
+#             Workaround to verify our POST with created_ID = 10 worked:
+#                 instead do GET http://localhost:4567/categories/1/todos
+#                 and store response for all todo's
 
-                This function parses this response and checks if an object with id == created_ID exists
-    """
-    get_request = request.get_request_by_name('GET')
-    response = get_request.response
-    created_ID = request.get_created_ID()
+#                 This function parses this response and checks if an object with id == created_ID exists
+#     """
+#     get_request = request.get_request_by_name('GET')
+#     response = get_request.response
+#     created_ID = request.get_created_ID()
 
-    assert_in(created_ID, extract_response_id(response, object_name))
+#     assert_in(created_ID, extract_response_id(response, object_name))
 
 
 def verify_get_worked(request, object_name):
@@ -132,6 +134,14 @@ def verify_get_worked(request, object_name):
 
 
 
+def verify_all_operations(request, object_name):
+    # verify post worked
+    verify_post_created_object(request, object_name)
+    # verify that get worked
+    verify_get_worked(request, object_name)
+    # verify delete worked
+    verify_state_preserved(request)
+
 
 def test_create_delete_categories():
     for inp in get_request_inputs():
@@ -139,17 +149,8 @@ def test_create_delete_categories():
         (url, ID, params) = inp
         with StateRestoringRequest(url, ID=ID, params=params) as request:
             request.perform_requests()
-            object_name = extract_object_name(url)
-            if re.search(r'(.*/categories/\d+/todos)', url):
-                verify_get_category_todos(request, object_name)
-
-            # verify post worked
-            verify_post_created_object(request, object_name)
-            verify_get_worked(request, object_name)
-            # verify delete worked
-            verify_state_preserved(request)
-
-            print('done requests')
+            verify_all_operations(request, extract_object_name(url))
+            print('----------------- done requests for url: {} ---------------\n'.format(url))
 
 
 if __name__ == "__main__":
@@ -160,8 +161,10 @@ if __name__ == "__main__":
 
 """
 Done:
-    /categories/
+    get all /categories/
     /categories/id/todos/id - this isn't actually a bug tho ..
+    /categories/:id/projects/:id
+    /categories/id
 
 next:
     Add a GET before anythign in StateRestoringRequest
@@ -175,8 +178,6 @@ next:
 
 
 
-    /categories/id
     /categories/:id/projects
-    /categories/:id/projects/:id
 
 """
