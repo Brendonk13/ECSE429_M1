@@ -64,7 +64,7 @@ class RequestStates:
 
 
     def verify_results(self, request):
-        if not request.ok:
+        if not request.request.ok:
             print(f'Exception encountered during: {request}')
             raise Exception
         if request.name == 'POST':
@@ -79,7 +79,7 @@ class RequestStates:
     def manually_delete_data(self):
         """ Called by immutable request instance when an error occurs """
         req = requests.delete(self.url)
-        print(f'manually deleted, status_code: {req.status_code}')
+        print(f'manually deleted, status_code: {req.request.status_code}')
 
 
 
