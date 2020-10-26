@@ -1,0 +1,4 @@
+curl -X GET -H 'Content-Type: application/json'  http://localhost:4567/categories/1/todos/1
+
+returns nothing right after posting (and checking the output id!):
+curl -X POST -d '{"title":"new todo"}' -H 'Content-Type: application/json'  http://localhost:4567/categories/1/todos

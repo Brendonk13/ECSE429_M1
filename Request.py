@@ -51,11 +51,13 @@ class RequestStates:
 
     def make_requests(self):
         for request in self.get_requests():
+            # print('before request !')
             if self.have_done_post():
                 # change id to one created by the post so we delete the one just created
                 new_id = self.completed_requests['POST'].created_ID
                 request.set_new_id(new_id)
 
+            print('before request !')
             request.make_request()
             print(request)
             print()
@@ -64,7 +66,7 @@ class RequestStates:
 
 
     def verify_results(self, request):
-        if not request.request.ok:
+        if request.request and not request.request.ok:
             print(f'Exception encountered during: {request}')
             raise Exception
         if request.name == 'POST':
@@ -78,9 +80,8 @@ class RequestStates:
 
     def manually_delete_data(self):
         """ Called by immutable request instance when an error occurs """
-        req = requests.delete(self.url)
-        print(f'manually deleted, status_code: {req.request.status_code}')
-
+        # req = requests.delete(self.url)
+        # print(f'manually deleted, status_code: {req.status_code}')
 
 
 class StateRestoringRequest:
@@ -90,6 +91,7 @@ class StateRestoringRequest:
         GET to verify data was added
         DELETE to restore state
     """
+
 
     def __init__(self, url, ID=-1, json=True, params=None):
         """ Default is a get request with no parameters which returns json data """
@@ -103,6 +105,7 @@ class StateRestoringRequest:
         self.url = url
         self.ID = ID
         self.params = params
+        print(params)
         self.request_states = RequestStates(self.url, self.ID, self.params)
 
 
@@ -116,7 +119,21 @@ class StateRestoringRequest:
         # print(self.recieved_bad_input)
         # print('------------------')
         if self.need_to_clean_up():
+            print('need to cleanup')
+            print(f'{self.request_states.have_changed_state}')
+            print(f'{self.request_states.deleted_data}')
             self.request_states.manually_delete_data()
+
+
+    def get_request_by_name(self, name):
+        return self.request_states.completed_requests[name]
+
+
+    def get_created_ID(self):
+        """
+            Returns the ID of the created object when the post request was made
+        """
+        return self.request_states.completed_requests['POST'].created_ID
 
 
     def perform_requests(self):

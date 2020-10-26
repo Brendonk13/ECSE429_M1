@@ -1,5 +1,6 @@
 import json
 from requests import get, post, delete
+from re import search
 
 class Post:
     def __init__(self, url, params):
@@ -39,16 +40,31 @@ class Get:
 
     def set_new_id(self, ID):
         self.args = [self.url + '/' + str(ID)]
+        self.url  = self.args[0]
 
 
     def make_request(self):
+        search_result = search(r'(.*/categories/\d+/todos)/(\d+)', self.url)
+        if search_result:
+            self.args = [search_result.group(1)]
+            print(self.args)
+
         self.request = get(*self.args)
         self.response = self.request.json()
+        # if search_result:
+
+
+
+    def get_status_code(self):
+        """
+            need to wrap this since sometimes we don't make a request (when given categories/num/todos/num endpoint)
+        """
+        return self.request.status_code if self.request else -1
 
 
     def __repr__(self):
         return 'GET:\n\trequests.get({})\n\tjson response: {}\n\thttp status code: {}'.format(
-            self.args[0], self.response, self.request.status_code
+            self.args[0], self.response, self.get_status_code()
         )
 
 
