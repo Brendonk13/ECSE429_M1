@@ -6,6 +6,24 @@ from request_types import Get
 from helpers import has_id, extract_id, extract_response_id, extract_object_name
 
 
+def original_response(endpoint):
+    """
+        This function returns the response that the server would make if no state changes have been made to the application
+        The returned values are the result of (copy-pasted): curl -X GET -H 'Content-Type: application/json'  http://localhost:4567/$endpoint
+    """
+    base_url_length = len("http://localhost:4567/")
+    # extract test after base url to avoid typing full url in if statements
+    endpoint = endpoint[base_url_length:]
+
+    if endpoint == 'categories':
+        return {"categories":[{"id":"1","title":"Office","description":""},{"id":"2","title":"Home","description":""}]}
+
+    if endpoint in ('categories/1/todos', 'categories/2/todos'):
+        return {"todos":[]}
+
+    if endpoint in ('categories/1/projects', 'categories/2/projects'):
+        return {"projects":[]}
+
 
 def rand_num():
     # random number from random range 1 -> random() * 1000
@@ -37,12 +55,11 @@ def category_endpoints():
     return [
         'categories/{}/todos'.format(choice(existing_IDs)),
         'categories',
-        '/categories/{}/projects'.format(choice(existing_IDs)),
+        'categories/{}/projects'.format(choice(existing_IDs)),
     ]
-# 'categories',
 
 
-def get_urls():
+def get_tested_endpoints():
     base_url = "http://localhost:4567/"
     return [
         base_url + endpoint
@@ -58,7 +75,7 @@ def get_request_inputs():
     """
     ID = None
     inputs = []
-    for url in get_urls():
+    for url in get_tested_endpoints():
         ID = -1 if not has_id(url) else extract_id(url)
 
         inputs.append((url, ID, random_request_parameter()))
@@ -74,6 +91,19 @@ def get_existing_category_IDs():
     if not response:
         return [-1]
     return extract_response_id(response, 'categories')
+
+
+def test_get_all():
+    """
+        performs get requests on each possible category endpoint
+        queries ALL objects per endpoint and verifies by comparing the response to the original state of the application's equivalent response
+    """
+    for endpoint in get_tested_endpoints():
+        request =  Get(endpoint)
+        request.make_request()
+        print(f'found   : {request.response}\noriginal: {original_response(endpoint)}\n')
+        assert_equal(request.response, original_response(endpoint))
+
 
 
 def test_get_categories():
@@ -98,28 +128,6 @@ def verify_state_preserved(request):
     """
     original_state = request.request_states.original_state
     assert_equal(original_state, request.request_states.get_current_state())
-
-
-# def verify_get_category_todos(request, object_name):
-#     """
-#         Called when we create a StateRestoringRequest with url of the following form:
-#         http://localhost:4567/categories/1/todos
-
-#         For example, if created_ID = 10:
-#             Then the get request we would LIKE to make is: GET http://localhost:4567/categories/1/todos/10
-
-#             But the service we are testing doesn't allow this type of request
-#             Workaround to verify our POST with created_ID = 10 worked:
-#                 instead do GET http://localhost:4567/categories/1/todos
-#                 and store response for all todo's
-
-#                 This function parses this response and checks if an object with id == created_ID exists
-#     """
-#     get_request = request.get_request_by_name('GET')
-#     response = get_request.response
-#     created_ID = request.get_created_ID()
-
-#     assert_in(created_ID, extract_response_id(response, object_name))
 
 
 def verify_get_worked(request, object_name):
@@ -154,8 +162,9 @@ def test_create_delete_categories():
 
 
 if __name__ == "__main__":
-    test_get_categories()
+    # test_get_categories()
     test_create_delete_categories()
+    test_get_all()
 
 
 

@@ -38,7 +38,12 @@ class RequestStates:
 
 
     def get_requests(self):
-        # the requests made, in order
+        """
+            the requests made, in order:
+            POST endpoint
+            GET  endpoint/created_ID
+            DELETE endpoint/created_ID
+        """
         return [
                 Post(self.url, self.params),
                 Get(self.url, ID=self.ID),

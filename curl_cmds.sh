@@ -44,7 +44,8 @@ do_test() {
     echo '------------------------------------------------------------------------'
 }
 
-declare -a endpoints=('projects/1/tasks' 'projects/1/categories' 'todos/1/tasksof' 'todos/1/categories' 'todos' 'projects' 'categories')
+# declare -a endpoints=('projects/1/tasks' 'projects/1/categories' 'todos/1/tasksof' 'todos/1/categories' 'todos' 'projects' 'categories')
+declare -a endpoints=('categories' 'categories/2/todos' 'categories/2/projects')
 declare -a req_types=('get')
 
 if [ $# -eq 0 ]; then

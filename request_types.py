@@ -55,9 +55,10 @@ class Get:
         # this fxn handles endpoints which do not support get requests
         self.args = get_request_url(self.url)
 
-        print(self.args)
+        print(f'\n args to get: {self.args}')
         self.request = get(*self.args)
         self.response = self.request.json()
+        print(self.response)
         # if search_result:
 
 
