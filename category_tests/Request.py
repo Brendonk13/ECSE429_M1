@@ -3,21 +3,6 @@ import requests
 from request_types import Post, Get, Delete
 from helpers import has_id, extract_id, extract_response_id, url_without_id
 
-""" Notes
-
-    POST:
-        cannot end with id
-        no trailing slash allowed
-
-    GET:
-        optional trailing ID
-        no trailing slash allowed
-
-    DELETE:
-        MUST specify an ID
-        trailing slash: allowed (no err code) but does nothing
-"""
-
 
 class ThingifierServiceInactive(Exception):
     """
@@ -60,7 +45,6 @@ class RequestStates:
         # removing the id from the url means we will retrieve all objects at this endpoint
         request = Get(get_all_url)
         request.make_request()
-        print(f'original state: {request}')
         return request.response
 
 
@@ -76,23 +60,18 @@ class RequestStates:
     def make_requests(self):
         self.store_initial_state()
         for request in self.get_requests():
-            # print('before request !')
             if self.have_done_post():
                 # change id to one created by the post so we delete the one just created
                 new_id = self.completed_requests['POST'].created_ID
                 request.set_new_id(new_id)
 
-            print('before request !')
             request.make_request()
-            print(request)
-            print()
             self.verify_results(request)
             self.completed_requests.setdefault(request.name, request)
 
 
     def verify_results(self, request):
         if request.request and not request.request.ok:
-            print(f'Exception encountered during: {request}')
             raise Exception
         if request.name == 'POST':
             # have changed the state of the application after a post
@@ -105,8 +84,8 @@ class RequestStates:
 
     def manually_delete_data(self):
         """ Called by immutable request instance when an error occurs """
-        # req = requests.delete(self.url)
-        # print(f'manually deleted, status_code: {req.status_code}')
+        req = requests.delete(self.url)
+        print(f'manually deleted, status_code: {req.status_code}')
 
 
 class StateRestoringRequest:
@@ -120,17 +99,11 @@ class StateRestoringRequest:
 
     def __init__(self, url, ID=-1, json=True, params=None):
         """ Default is a get request with no parameters which returns json data """
-        self.recieved_bad_input = False
         if not port_is_open():
             raise ThingifierServiceInactive
-        # if ID == -1:
-        #     print("don't use StateRestoringRequest without passing in a valid ID")
-        #     self.recieved_bad_input = True
-        #     return
         self.url = url
         self.ID = ID
         self.params = params
-        print(params)
         self.request_states = RequestStates(self.url, self.ID, self.params)
 
 
@@ -139,12 +112,8 @@ class StateRestoringRequest:
 
 
     def __exit__(self, *args):
-        # if self.recieved_bad_input:
-        #     return
-        # print(self.recieved_bad_input)
-        # print('------------------')
         if self.need_to_clean_up():
-            print('need to cleanup')
+            # print('need to cleanup')
             self.request_states.manually_delete_data()
 
 
@@ -160,8 +129,6 @@ class StateRestoringRequest:
 
 
     def perform_requests(self):
-        if self.recieved_bad_input:
-            return
         self.request_states.make_requests()
 
 

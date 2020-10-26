@@ -17,10 +17,10 @@ class Post:
         self.request = post(*self.args, **self.kwargs)
         self.response = self.request.json()
         if 'id' not in self.response:
-            print(f'no id found in post response: {self.response}')
+            print("POST request to endpoint: '{}' failed, no new object created.".format(self.args[0]))
         else:
             self.created_ID = self.response['id']
-            print(f' new id: {self.created_ID}')
+            # print(f' new id: {self.created_ID}')
 
 
     def __repr__(self):
@@ -40,27 +40,16 @@ class Get:
 
 
     def set_new_id(self, ID):
-        print(f'before set new id: {self.url}')
         self.args = [self.url + '/' + str(ID)]
         self.url  = self.args[0]
-        print(f'after set new id: {self.url}')
 
 
     def make_request(self):
-        # search_result = search(r'(.*/categories/\d+/todos)/(\d+)', self.url)
-        # if search_result:
-        #     self.args = [search_result.group(1)]
-        #     print(self.args)
-
         # this fxn handles endpoints which do not support get requests
         self.args = get_request_url(self.url)
 
-        print(f'\n args to get: {self.args}')
         self.request = get(*self.args)
         self.response = self.request.json()
-        print(self.response)
-        # if search_result:
-
 
 
     def get_status_code(self):

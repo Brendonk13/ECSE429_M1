@@ -105,7 +105,7 @@ def test_get_all():
     for endpoint in get_tested_endpoints():
         request =  Get(endpoint)
         request.make_request()
-        print(f'found   : {request.response}\noriginal: {original_response(endpoint)}\n')
+        # print(f'found   : {request.response}\noriginal: {original_response(endpoint)}\n')
         assert_equal(request.response, original_response(endpoint))
 
 
@@ -157,7 +157,7 @@ def verify_all_operations(request, object_name):
 
 def test_create_delete_categories():
     for inp in random_order_queries():
-        print(inp)
+        # print(inp)
         (url, ID, params) = inp
         with StateRestoringRequest(url, ID=ID, params=params) as request:
 

@@ -4,10 +4,13 @@ ID_PATTERN = re.compile(r'.*/(\d+)')
 URL_PATTERN = re.compile(r'(.*)/\d+')
 OBJECT_NAME_PATTERN = re.compile(r'.*/([a-zA-Z]+).*')
 
+# These endpoints don't allow us to get a specific ID, more explained
+# in get_request_url definition as well as where this function is called in helpers.py/Get object
 NO_GET_ENDPOINTS = [
         re.compile(r'(.*/categories/\d+/todos)/(\d+)'),
         re.compile(r'(.*/categories/\d+/projects)/(\d+)'),
     ]
+
 
 def has_id(endpoint):
     return endpoint[-1].isdecimal()
@@ -19,6 +22,10 @@ def extract_id(endpoint):
 
 
 def url_without_id(endpoint):
+    """
+        input: "http://localhost:4567/todos/1234"
+        output: "http://localhost:4567/todos"
+    """
     if not has_id(endpoint):
         return endpoint
     url = re.search(URL_PATTERN, endpoint)
