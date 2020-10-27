@@ -172,7 +172,7 @@ def test_create_delete_categories():
 
             request.perform_requests()
             verify_all_operations(request, extract_object_name(url))
-            print('----------------- done requests for url: {} ---------------\n'.format(url))
+            # print('----------------- done requests for url: {} ---------------\n'.format(url))
 
 
 def random_order_category_test():
