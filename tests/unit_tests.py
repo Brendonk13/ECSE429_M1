@@ -391,4 +391,6 @@ def test_shutdown():
 
 
 if __name__ == '__main__':
+    test_get_all_todos()
     test_categories_in_random_order()
+

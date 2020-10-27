@@ -28,6 +28,7 @@ do_test() {
     elif [ "$1" = "get" ]; then
         echo 'GET'
         curl -X GET -H 'Content-Type: application/json'  http://localhost:4567/$endpoint/$ID
+        # http://localhost:4567/categories/1/todos
 
     elif [ "$1" = 'del' ]; then
         echo 'DELETE'

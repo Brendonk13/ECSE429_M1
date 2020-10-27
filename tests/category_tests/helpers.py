@@ -5,6 +5,8 @@ ID_PATTERN = re.compile(r'.*/(\d+)')
 URL_PATTERN = re.compile(r'(.*)/\d+')
 OBJECT_NAME_PATTERN = re.compile(r'.*/([a-zA-Z]+).*')
 
+ALSO_DELETE_TODO_PATTERN = re.compile(r'.*/categories/\d+/todos.*')
+
 # These endpoints don't allow us to get a specific ID, more explained
 # in get_request_url definition as well as where this function is called in helpers.py/Get object
 NO_GET_ENDPOINTS = [
@@ -65,6 +67,11 @@ def get_request_url(endpoint):
             return [search_result.group(1)]
 
     return [endpoint]
+
+
+def has_side_effects(endpoint):
+    search_result = re.search(ALSO_DELETE_TODO_PATTERN, endpoint)
+    return True if search_result else False
 
 
 def verify_service_is_running():

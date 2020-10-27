@@ -2,8 +2,8 @@ from random import random, randrange, choice, shuffle
 import re
 from nose.tools import assert_true, assert_equal, assert_is_not_none, assert_list_equal, assert_in, assert_not_in
 from Request import StateRestoringRequest
-from request_types import Get
-from helpers import has_id, extract_id, extract_response_id, extract_object_name
+from request_types import Get, Delete
+from helpers import has_id, extract_id, extract_response_id, extract_object_name, has_side_effects
 
 
 def original_response(endpoint):
@@ -109,10 +109,30 @@ def test_get_all():
         assert_equal(request.response, original_response(endpoint))
 
 
-
 def test_get_categories():
     # initial state of application has 2 categories: 1, 2
     assert(len(get_existing_category_IDs()) == 2)
+
+
+def non_original_state_todos():
+    request = Get("http://localhost:4567/todos")
+    request.make_request()
+    response = request.response
+
+    original_todo_IDs = set(('1', '2'))
+    current_IDs = set(extract_response_id(response, 'todos'))
+
+    return current_IDs - original_todo_IDs
+
+
+def delete_side_effect_todos(request):
+    """
+    POST to endpoint: /categories/id/todos creates a todo as well as a category
+        This function deletes the todo's that were created as a result of the above query.
+    """
+    for ID in non_original_state_todos():
+        request = Delete("http://localhost:4567/todos", ID)
+        request.make_request()
 
 
 def verify_all_return_codes(request):
@@ -171,6 +191,9 @@ def test_create_delete_categories():
         with StateRestoringRequest(url, ID=ID, params=params) as request:
 
             request.perform_requests()
+            if has_side_effects(url):
+                delete_side_effect_todos(request)
+
             verify_all_operations(request, extract_object_name(url))
             # print('----------------- done requests for url: {} ---------------\n'.format(url))
 
@@ -179,6 +202,7 @@ def random_order_category_test():
     tests = [test_create_delete_categories, test_get_all]
     shuffle(tests)
     return tests
+
 
 if __name__ == "__main__":
     for test_function in random_order_category_test():
