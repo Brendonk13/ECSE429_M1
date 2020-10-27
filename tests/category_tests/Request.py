@@ -79,7 +79,7 @@ class RequestStates:
     def manually_delete_data(self):
         """ Called by immutable request instance when an error occurs """
         req = requests.delete(self.url)
-        print(f'manually deleted, status_code: {req.status_code}')
+        print('manually deleted, status_code: {}'.format(req.status_code))
 
 
 class StateRestoringRequest:
@@ -143,4 +143,4 @@ if __name__ == "__main__":
     )
     with r as request:
         request.perform_requests()
-        print(f'------ done requests for url: {request.url} -------')
+        print('------ done requests for url: {} -------'.format(request.url))
