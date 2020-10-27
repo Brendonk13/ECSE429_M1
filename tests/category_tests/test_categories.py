@@ -115,6 +115,14 @@ def test_get_categories():
     assert(len(get_existing_category_IDs()) == 2)
 
 
+def verify_all_return_codes(request):
+    request_names = ['POST', 'GET', 'DELETE']
+    for name in request_names:
+        request_with_name = request.get_request_by_name(name)
+        assert_true(request_with_name.request.status_code)
+
+
+
 def verify_post_created_object(request, object_name):
     # state before post
     original_state = request.request_states.original_state
@@ -153,6 +161,7 @@ def verify_all_operations(request, object_name):
     verify_get_worked(request, object_name)
     # verify delete worked
     verify_state_preserved(request)
+    verify_all_return_codes(request)
 
 
 def test_create_delete_categories():
